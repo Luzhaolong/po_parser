@@ -151,12 +151,21 @@ def main():
     # Centered company + app heading
     st.markdown(
         """
-        <h1 style='text-align: center;'>
-            Industrial Laser Machines, LLC<br>📄 Purchase Order PDF Extractor
-        </h1>
+        <h2 style='text-align: center;'>
+            Industrial Laser Machines, LLC
+        </h2>
         """,
         unsafe_allow_html=True
     )
+
+    st.markdown(
+        """
+        <h3 style='text-align: center;'>
+            Start converting PO to CSV
+        </h3>""",
+        unsafe_allow_html=True)
+
+    st.write("---")
 
     if "uploaded_files" not in st.session_state:
         st.session_state.uploaded_files = []
