@@ -7,7 +7,10 @@ from pathlib import Path
 from extractor import extract_po_info, extract_item_blocks
 
 st.set_page_config(page_title="PO PDF Extractor", layout="wide")
-
+# Check if the user is logged in
+if "logged_in" not in st.session_state or not st.session_state["logged_in"]:
+    st.error("You must be logged in to access this page.")
+    st.stop()  # Stop further execution of the page
 # -----------------------------
 # Modern Dual-mode CSS Styling for st.data_editor
 # -----------------------------
