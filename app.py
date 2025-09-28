@@ -1,10 +1,4 @@
-from dotenv import load_dotenv
-import os
 import streamlit as st
-
-
-# Load environment variables from .env file
-load_dotenv()
 
 # Initialize session state for login
 if "logged_in" not in st.session_state:
@@ -12,19 +6,19 @@ if "logged_in" not in st.session_state:
 if "current_user" not in st.session_state:
     st.session_state["current_user"] = None
 
-# Load user credentials from environment variables
+# Load user credentials from Streamlit secrets
 USER_CREDENTIALS = {
-    os.getenv("LUKE_LU_USERNAME"): {
-        "password": os.getenv("LUKE_LU_PASSWORD"),
-        "role": os.getenv("LUKE_LU_ROLE"),
+    st.secrets["LUKE_LU_USERNAME"]: {
+        "password": st.secrets["LUKE_LU_PASSWORD"],
+        "role": st.secrets["LUKE_LU_ROLE"],
     },
-    os.getenv("CARTER_DING_USERNAME"): {
-        "password": os.getenv("CARTER_DING_PASSWORD"),
-        "role": os.getenv("CARTER_DING_ROLE"),
+    st.secrets["CARTER_DING_USERNAME"]: {
+        "password": st.secrets["CARTER_DING_PASSWORD"],
+        "role": st.secrets["CARTER_DING_ROLE"],
     },
-    os.getenv("ZACH_LI_USERNAME"): {
-        "password": os.getenv("ZACH_LI_PASSWORD"),
-        "role": os.getenv("ZACH_LI_ROLE"),
+    st.secrets["ZACH_LI_USERNAME"]: {
+        "password": st.secrets["ZACH_LI_PASSWORD"],
+        "role": st.secrets["ZACH_LI_ROLE"],
     },
 }
 

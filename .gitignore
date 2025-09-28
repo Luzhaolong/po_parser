@@ -9,4 +9,6 @@ wheels/
 # Virtual environments
 .venv
 POs/
+PO_test/
 PDF_to_CSV_Conversion.ipynb
+extractor_openup.ipynb
