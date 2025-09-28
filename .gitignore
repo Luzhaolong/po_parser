@@ -8,3 +8,5 @@ wheels/
 .env
 # Virtual environments
 .venv
+POs/
+PDF_to_CSV_Conversion.ipynb
