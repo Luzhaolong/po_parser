@@ -18,5 +18,8 @@ dependencies = [
     "streamlit >=1.50.0",
     "auth >=0.5.3",
     "python-dotenv",
+    "plotly",
+    "openai >=1.108.1",
+    "python-dotenv",
 ]
 

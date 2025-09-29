@@ -1,12 +1,10 @@
 import streamlit as st
 
-# Initialize session state for login and chatbot
+# Initialize session state for login
 if "logged_in" not in st.session_state:
     st.session_state["logged_in"] = False
 if "current_user" not in st.session_state:
     st.session_state["current_user"] = None
-if "chat_history" not in st.session_state:
-    st.session_state["chat_history"] = []
 
 # Load user credentials from Streamlit secrets
 USER_CREDENTIALS = {
@@ -30,19 +28,6 @@ def login(username, password):
     if user and user["password"] == password:
         return True
     return False
-
-# Chatbot response function
-def chatbot_response(user_input):
-    if "po parser" in user_input.lower():
-        return "The PO parser helps you extract data from PDF files and convert it into CSV format. You can upload PDFs or ZIP archives containing PDFs to start."
-    elif "upload" in user_input.lower():
-        return "To upload files, navigate to the 'PO PDF Extractor' page and use the file uploader to upload your PDFs or ZIP files."
-    elif "csv" in user_input.lower():
-        return "After processing your files, you can download the extracted data as a CSV file by selecting the rows you want and clicking the download button."
-    elif "logout" in user_input.lower():
-        return "To log out, click the 'Log Out' button in the sidebar."
-    else:
-        return "I'm here to help! Please ask me about the PO parser, uploading files, or downloading CSVs."
 
 # Login screen
 if not st.session_state["logged_in"]:
@@ -69,7 +54,6 @@ else:
         st.session_state["logged_in"] = False
         st.session_state["current_user"] = None
         st.rerun()  # Refresh the app to show the login screen
-
     # Top-left logo
     col1, col3, col2 = st.columns([2, 1, 2])
     with col3:
@@ -95,17 +79,3 @@ else:
         st.write("1. Log in using your credentials.")
         st.write("2. Navigate to the desired page using the sidebar.")
         st.write("3. Follow the instructions on each page to upload and process your files.")
-
-    # Chatbot section
-    st.sidebar.title("💬 Chat with Assistant")
-    user_input = st.sidebar.text_input("Ask me anything about the PO parser:")
-    if user_input:
-        response = chatbot_response(user_input)
-        st.session_state.chat_history.append({"user": user_input, "bot": response})
-
-    # Display chat history
-    if st.session_state.chat_history:
-        st.sidebar.write("### Chat History")
-        for chat in st.session_state.chat_history:
-            st.sidebar.write(f"**You:** {chat['user']}")
-            st.sidebar.write(f"**Bot:** {chat['bot']}")
