@@ -16,7 +16,10 @@ from helpers.ui_components import (
 # Load environment variables
 load_dotenv()
 
-
+if "logged_in" not in st.session_state or not st.session_state["logged_in"]:
+    st.error("You must be logged in to access this page.")
+    st.stop()  # Stop further execution of the page
+    
 def initialize_session_state():
     """Initialize Streamlit session state variables"""
     if 'chat_system' not in st.session_state:
