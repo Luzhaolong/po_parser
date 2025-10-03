@@ -5,7 +5,7 @@ DEFAULT_MODEL = "gpt-4o-mini"  # More cost-effective for most queries
 ADVANCED_MODEL = "gpt-4o"      # For complex analysis
 
 # App Configuration
-APP_TITLE = "ILM Order Tracker Assistant"
+APP_TITLE = "Lingbo Group Order Tracker Assistant"
 APP_ICON = "🤖"
 PAGE_LAYOUT = "wide"
 

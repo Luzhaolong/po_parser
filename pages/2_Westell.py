@@ -4,7 +4,7 @@ import zipfile
 import os
 import pandas as pd
 from pathlib import Path
-from extractor import extract_po_info_ILM, extract_item_blocks_ILM
+from extractor import extract_po_info_Westl
 
 st.set_page_config(page_title="PO PDF Extractor", layout="wide")
 # Check if the user is logged in
@@ -101,47 +101,30 @@ def process_files(uploaded_files):
         if f.lower().endswith(".pdf") and not f.startswith("._") and "__MACOSX" not in root
     ]
 
-    all_data = []
+    all_rows = []
     for pdf_file in pdf_files:
-        po_info = extract_po_info_ILM(pdf_file)
-        item_blocks = extract_item_blocks_ILM(pdf_file)
-        if isinstance(item_blocks, dict) and "error" in item_blocks:
-            st.warning(item_blocks["error"])
-            continue
-        if not isinstance(item_blocks, list):
-            continue
+        all_rows.extend(extract_po_info_Westl(pdf_file))
 
-        for block in item_blocks:
-            if not po_info.get("Document Date", ""):
-                continue
-            row = {
-                "Document Number": po_info.get("Document Number", ""),
-                "Reference": po_info.get("Reference", ""),
-                "Item_Code": block.get("Item_Code", ""),
-                "PO_issue Date": po_info.get("Document Date", ""),
-                "Delivery Date": block.get("Delivery Date", ""),
-                "Description": block.get("Description", ""),
-                "Item Details": block.get("Item Details", ""),
-                "UoM(optional)": block.get("UoM(optional)", ""),
-                "Quantity": block.get("Quantity", ""),
-                "Price": block.get("Price", ""),
-                "Total": block.get("Total", ""),
-                "Payment Term": po_info.get("Payment Term", "")
-            }
-            all_data.append(row)
 
-    if not all_data:
+    if all_rows:
+        df = pd.DataFrame(all_rows, columns=[
+        "Document Number", "Part/Description", "Item_Code", "PO_issue Date", "Delivery Date",
+        "SHIP VIA", "FOB", "UoM(optional)", "Quantity", "Price", "Total",
+        "Payment Term", "BUYER", "REQ#", "REQUISITIONER"
+    ])
+
+    # Remove exact duplicate rows
+        df.drop_duplicates(inplace=True)
+
+    # Sort by Document Number
+        df.sort_values(by="Document Number", inplace=True)
+
+        df.to_csv("po_extracted.csv", index=False)
+        print("✅ Extraction complete. Saved to po_extracted.csv")
+
+    if not all_rows:
         return pd.DataFrame()
 
-    df = pd.DataFrame(all_data)
-    expected_cols = [
-        "Document Number","Reference","Item_Code",
-        "PO_issue Date","Delivery Date",
-        "Description","Item Details","UoM(optional)",
-        "Quantity","Price","Total","Payment Term"
-    ]
-    df = df.dropna(subset=["PO_issue Date"])
-    df = df[[c for c in expected_cols if c in df.columns]]
     return df
 
 # -----------------------------
@@ -152,7 +135,7 @@ def main():
     st.markdown(
         """
         <h2 style='text-align: center;'>
-            Industrial Laser Machines, LLC
+            Westell
         </h2>
         """,
         unsafe_allow_html=True
