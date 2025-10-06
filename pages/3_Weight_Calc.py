@@ -6,6 +6,11 @@ import tempfile
 import os
 
 
+st.set_page_config(page_title="PO PDF Extractor", layout="wide")
+# Check if the user is logged in
+if "logged_in" not in st.session_state or not st.session_state["logged_in"]:
+    st.error("You must be logged in to access this page.")
+    st.stop()  # Stop further execution of the page
 
 st.set_page_config(page_title="STEP File Volume Calculator", page_icon="📐", layout="wide")
     
