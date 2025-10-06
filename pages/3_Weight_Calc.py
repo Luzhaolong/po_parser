@@ -118,15 +118,15 @@ if uploaded_files:
                     st.dataframe(display_df, use_container_width=True)
                     
                     # Summary statistics
-                    col1, col2, col3, col4 = st.columns(4)
-                    with col1:
-                        st.metric("Total Files", len(results_df))
-                    with col2:
-                        st.metric("Total SV (cm³)", f"{results_df['SV'].sum():.2f}")
-                    with col3:
-                        st.metric("Total Weight (kg)", f"{results_df['SV_weight_kg'].sum():.2f}")
-                    with col4:
-                        st.metric("Avg Max Value", f"{results_df['max_internal_or_weight'].mean():.4f}")
+                    #col1, col2, col3, col4 = st.columns(4)
+                    #with col1:
+                    #    st.metric("Total Files", len(results_df))
+                    #with col2:
+                    #    st.metric("Total SV (cm³)", f"{results_df['SV'].sum():.2f}")
+                    #with col3:
+                    #    st.metric("Total Weight (kg)", f"{results_df['SV_weight_kg'].sum():.2f}")
+                    #with col4:
+                    #    st.metric("Avg Max Value", f"{results_df['max_internal_or_weight'].mean():.4f}")
                     
                     # Download button
                     csv = results_df.to_csv(index=False)
