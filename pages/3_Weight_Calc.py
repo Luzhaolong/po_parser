@@ -1,11 +1,12 @@
 import os
 import streamlit as st # type: ignore
 from weight_calc import process_step_file, MATERIAL_DENSITIES
-
 import pandas as pd
 import tempfile
 import os
-from pathlib import Path
+
+
+
 st.set_page_config(page_title="STEP File Volume Calculator", page_icon="📐", layout="wide")
     
 st.title("📐 STEP File Volume Calculator")
