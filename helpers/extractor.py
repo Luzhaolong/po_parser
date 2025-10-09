@@ -255,32 +255,38 @@ def parse_block(block_lines: list) -> dict:
 
     return data
 
+
 # -----------------------------
 # Function to extract required info
 # -----------------------------
-def extract_po_info_Westl(pdf_path: str) -> list:
+def extract_po_info_Westl(pdf_path):
     rows = []
     try:
         doc = fitz.open(pdf_path)
         full_text = ""
         for page_num in range(len(doc)):
             page = doc.load_page(page_num)
-            blocks = page.get_text("blocks")
-            blocks.sort(key=lambda b: (b[1], b[0]))
-            for b in blocks:
-                full_text += b[4] + "\n"
+            text_blocks = page.get_text("blocks")
+            text_blocks.sort(key=lambda block: (block[1], block[0]))
+            for block in text_blocks:
+                full_text += block[4] + "\n"
         doc.close()
+
+        ##print(full_text)
 
         lines = [l.strip() for l in full_text.splitlines() if l.strip()]
 
         # -------------------
         # Document Number
         # -------------------
-        first_int = re.search(r"\d+", full_text)
-        document_number = f"PO{first_int.group(0)}" if first_int else ""
+        first_int = None
+        for token in re.findall(r"\d+", full_text):
+            first_int = token
+            break
+        document_number = f"PO{first_int}" if first_int else ""
 
         # -------------------
-        # Header info
+        # Header info: PO Issue Date, Payment Term, Ship Via, FOB
         # -------------------
         po_issue_date, payment_term, ship_via, fob = "", "", "", ""
         for i, line in enumerate(lines):
@@ -290,16 +296,19 @@ def extract_po_info_Westl(pdf_path: str) -> list:
             net_match = re.search(r"(Net\s*\d+)", line, re.IGNORECASE)
             if net_match:
                 payment_term = net_match.group(1)
-                fob = line[:net_match.start()].strip()
+                fob_part = line[:net_match.start()].strip()
+                fob = fob_part if fob_part else ""
+
                 if i-1 >= 0:
                     upper_line = lines[i-1].strip()
                     if not re.match(r"^\d{1,2}/\d{1,2}/\d{2,4}", upper_line) \
-                       and not re.match(r"^\d+$", upper_line):
+                       and not re.match(r"^\d+", upper_line) \
+                       and not re.search(r"Net\s*\d+", upper_line, re.IGNORECASE):
                         ship_via = upper_line
                 break
 
         # -------------------
-        # Buyer, REQ# and Requisitioner (dynamic logic)
+        # Buyer, REQ# and Requisitioner
         # -------------------
         buyer, req_num, requisitioner = "", "", ""
         for i, line in enumerate(lines):
@@ -328,7 +337,10 @@ def extract_po_info_Westl(pdf_path: str) -> list:
                 else:
                     candidate_buyer = lines[i-3].strip() if i-3 >= 0 else ""  # 3 lines above
 
-                buyer = candidate_buyer if re.match(r"^\d+$", candidate_buyer) else ""
+                if re.match(r"^\d+$", candidate_buyer):
+                    buyer = candidate_buyer
+                else:
+                    buyer = ""
                 break
 
         # -------------------
@@ -378,15 +390,26 @@ def extract_po_info_Westl(pdf_path: str) -> list:
             used_lines.add(item_code)
 
             qty, uom = "", ""
-            for l in clean_blk:
+            qty_index = None
+
+            # --- Find Quantity & UoM ---
+            for i, l in enumerate(clean_blk):
                 if l in used_lines:
                     continue
                 m = re.match(r"^(\d+)\s+(\w+)?", l)
                 if m:
                     qty = m.group(1)
                     uom = m.group(2) if m.group(2) else ""
+                    qty_index = i
                     used_lines.add(l)
                     break
+
+            # --- Capture any lines between item_code and quantity ---
+            pre_desc_part = ""
+            if qty_index is not None and qty_index > 1:
+                between_lines = clean_blk[1:qty_index]
+                if between_lines:
+                    pre_desc_part = " ".join(between_lines).strip()
 
             floats = []
             for l in clean_blk:
@@ -420,6 +443,10 @@ def extract_po_info_Westl(pdf_path: str) -> list:
             elif usd_idx is None:
                 desc = " ".join(clean_blk[1:]).strip()
 
+            # --- Merge pre-quantity lines (if any) ---
+            if pre_desc_part:
+                desc = f"{pre_desc_part} {desc}".strip()
+
             row = {
                 "Document Number": document_number,
                 "Part/Description": desc,
@@ -442,78 +469,3 @@ def extract_po_info_Westl(pdf_path: str) -> list:
     except Exception as e:
         print(f"❌ Error in {pdf_path}: {e}")
     return rows
-
-# -----------------------------
-# Main script
-# -----------------------------
-def main():
-    input_pdf_folder = Path("input_pdf_folder")
-    output_dir = Path("output")
-
-    # Reset folders
-    if output_dir.exists():
-        shutil.rmtree(output_dir)
-    output_dir.mkdir(parents=True, exist_ok=True)
-
-    pdf_files = []
-    for root, _, files_in_dir in os.walk(input_pdf_folder):
-        for f in files_in_dir:
-            if f.lower().endswith(".pdf") and not f.startswith("._") and "__MACOSX" not in root:
-                pdf_files.append(os.path.join(root, f))
-
-    all_data = []
-    for pdf_file in pdf_files:
-        po_info = extract_po_info(pdf_file)
-        item_blocks = extract_item_blocks(pdf_file)
-
-        if isinstance(item_blocks, dict) and "error" in item_blocks:
-            print(item_blocks["error"])
-            continue
-        elif not isinstance(item_blocks, list):
-            continue
-
-        for block in item_blocks:
-            if not po_info.get("Document Date", ""):
-                continue
-
-            row = {
-                "Document Number": po_info.get("Document Number", ""),
-                "Reference": po_info.get("Reference", ""),
-                "Item_Code": block.get("Item_Code", ""),
-                "PO_issue Date": po_info.get("Document Date", ""),
-                "Delivery Date": block.get("Delivery Date", ""),
-                "Description": block.get("Description", ""),
-                "Item Details": block.get("Item Details", ""),
-                "UoM(optional)": block.get("UoM(optional)", ""),
-                "Quantity": block.get("Quantity", ""),
-                "Price": block.get("Price", ""),
-                "Total": block.get("Total", ""),
-                "Payment Term": po_info.get("Payment Term", "")
-            }
-            all_data.append(row)
-
-    if all_data:
-        df = pd.DataFrame(all_data)
-        expected_cols = [
-            "Document Number","Reference","Item_Code",
-            "PO_issue Date","Delivery Date",
-            "Description","Item Details","UoM(optional)",
-            "Quantity","Price","Total","Payment Term"
-        ]
-        df = df.dropna(subset=["PO_issue Date"])
-        existing_cols = [c for c in expected_cols if c in df.columns]
-        df = df[existing_cols]
-
-        if "Document Number" in df.columns:
-            df["Document Number Sort"] = df["Document Number"].str.extract(r"(\d+)").astype(int)
-            df = df.sort_values(by="Document Number Sort").drop(columns=["Document Number Sort"])
-
-        out_file = output_dir / "Extracted.csv"
-        df.to_csv(out_file, index=False)
-        print(f"✅ Extraction complete → {out_file}")
-    else:
-        print("⚠️ No data extracted.")
-
-
-if __name__ == "__main__":
-    main()

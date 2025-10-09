@@ -4,7 +4,8 @@ import zipfile
 import os
 import pandas as pd
 from pathlib import Path
-from extractor import extract_po_info_ILM, extract_item_blocks_ILM
+from helpers.extractor import extract_po_info_ILM, extract_item_blocks_ILM
+
 
 st.set_page_config(page_title="PO PDF Extractor", layout="wide")
 # Check if the user is logged in

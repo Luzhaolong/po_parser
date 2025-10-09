@@ -1,6 +1,6 @@
 import os
 import streamlit as st # type: ignore
-from weight_calc import process_step_file, MATERIAL_DENSITIES
+from helpers.weight_calc import process_step_file, MATERIAL_DENSITIES
 import pandas as pd
 import tempfile
 import os
@@ -115,7 +115,7 @@ if uploaded_files:
                         if col in display_df.columns:
                             display_df[col] = display_df[col].round(4)
                     
-                    st.dataframe(display_df, use_container_width=True)
+                    st.dataframe(display_df, width='stretch')
                     
                     # Summary statistics
                     #col1, col2, col3, col4 = st.columns(4)
